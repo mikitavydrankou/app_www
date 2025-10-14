@@ -1,35 +1,37 @@
-Env-parameters for Django Project:
+# APP-WWW
 
-Development (.env.dev):
+## Environment Parameters
 
+#### Development (.env.dev)
+```
 DEBUG=True
 DJANGO_LOGLEVEL=debug
+```
 
-
-Production (.env.prod):
-
+#### Production (.env.prod)
+```
 DEBUG=False
 DJANGO_LOGLEVEL=info
+```
 
-Dev Server:
-
+## Dev Server
+Via script
+```
 chmod +x scripts/run_dev.sh
 ./scripts/run_dev.sh
-
-or
-
+```
+Or via Docker Compose
+```
 docker compose -f compose.dev.yml up --build -d
+```
 
-
-
-To run migrations:
-    
+## Run Migrations for testing
+Via script
+```
 chmod +x scripts/run_migration.sh
 ./scripts/run_migration.sh
-
-or 
-
+```
+Or via Docker Compose
+```
 docker compose run django-web python manage.py migrate
-
-
-
+```
