@@ -1,0 +1,1 @@
+docker compose run django-web python manage.py migrate
