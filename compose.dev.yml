@@ -32,9 +32,17 @@ services:
      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
      DATABASE_HOST: ${DATABASE_HOST}
      DATABASE_PORT: ${DATABASE_PORT}
-   volumes:
+   working_dir: /app
+   volumes: 
      - .:/app
    env_file:
      - .env
+
+ adminer:
+    image: adminer
+    restart: always
+    ports:
+      - "8080:8080"
+
 volumes:
    postgres_data:
