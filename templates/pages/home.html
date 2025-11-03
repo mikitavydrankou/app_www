@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+    <h1>Welcome</h1>
+    {% if user.is_authenticated %}
+        <p>This note is only visible to signed-in users.</p>
+        <p>You are signed in as <strong>{{ user.get_full_name|default:user.get_username }}</strong>.</p>
+    {% else %}
+        <p>Please <a href="{% url 'login' %}">log in</a> or <a href="{% url 'register' %}">create an account</a> to see private content.</p>
+    {% endif %}
+{% endblock %}

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>{% block title %}Simple App{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2rem; color: #222; }
+        nav { margin-bottom: 2rem; }
+        nav a { margin-right: 1rem; text-decoration: none; color: #0d6efd; }
+        nav span { margin-right: 1rem; }
+        main { max-width: 480px; }
+        form { margin-top: 1rem; }
+        form label { display: block; margin-top: 1rem; }
+        form input { width: 100%; padding: 0.5rem; margin-top: 0.25rem; box-sizing: border-box; }
+        form button { margin-top: 1rem; padding: 0.5rem 1rem; }
+        .errorlist { color: #c00; list-style: none; padding: 0; margin: 0.5rem 0 0 0; }
+    </style>
+</head>
+<body>
+<nav>
+    <a href="{% url 'home' %}">Home</a>
+    {% if user.is_authenticated %}
+        <span>Signed in as {{ user.get_username }}</span>
+        <a href="{% url 'logout' %}">Log out</a>
+    {% else %}
+        <a href="{% url 'login' %}">Log in</a>
+        <a href="{% url 'register' %}">Sign up</a>
+    {% endif %}
+</nav>
+<main>
+    {% block content %}{% endblock %}
+</main>
+</body>
+</html>
