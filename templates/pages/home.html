@@ -5,8 +5,42 @@
 {% block content %}
     <h1>Welcome</h1>
     {% if user.is_authenticated %}
-        <p>This note is only visible to signed-in users.</p>
-        <p>You are signed in as <strong>{{ user.get_full_name|default:user.get_username }}</strong>.</p>
+        <p>Hello, <strong>{{ user.get_full_name|default:user.get_username }}</strong>.</p>
+
+        <form method="post">
+            {% csrf_token %}
+            {{ form.non_field_errors }}
+            <label for="id_domain">{{ form.domain.label }}</label>
+            {{ form.domain }}
+            {% if form.domain.errors %}
+                <ul class="errorlist">
+                    {% for error in form.domain.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+            <button type="submit">Ping</button>
+        </form>
+
+        {% if ping_history %}
+            <h2>История пингов</h2>
+            <ul>
+                {% for record in ping_history %}
+                    <li>
+                        <strong>{{ record.domain }}</strong> —
+                        {% if record.success %}
+                            {{ record.latency_ms|floatformat:2 }} мс
+                        {% else %}
+                            ошибка: {{ record.error_message }}
+                        {% endif %}
+                        <br>
+                        <small>{{ record.created_at|date:"d.m.Y H:i" }}</small>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>История пингов пуста.</p>
+        {% endif %}
     {% else %}
         <p>Please <a href="{% url 'login' %}">log in</a> or <a href="{% url 'register' %}">create an account</a> to see private content.</p>
     {% endif %}

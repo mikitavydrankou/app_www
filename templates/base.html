@@ -15,6 +15,11 @@
         form input { width: 100%; padding: 0.5rem; margin-top: 0.25rem; box-sizing: border-box; }
         form button { margin-top: 1rem; padding: 0.5rem 1rem; }
         .errorlist { color: #c00; list-style: none; padding: 0; margin: 0.5rem 0 0 0; }
+        .messages { list-style: none; padding: 0; margin: 0 0 1.5rem 0; }
+        .message { padding: 0.75rem 1rem; border-radius: 0.5rem; margin-bottom: 0.5rem; background: #f1f5f9; }
+        .message.success { background: #d1fae5; }
+        .message.error { background: #fee2e2; }
+        .message.warning { background: #fef3c7; }
     </style>
 </head>
 <body>
@@ -28,6 +33,13 @@
         <a href="{% url 'register' %}">Sign up</a>
     {% endif %}
 </nav>
+{% if messages %}
+<ul class="messages">
+    {% for message in messages %}
+        <li class="message {{ message.tags }}">{{ message }}</li>
+    {% endfor %}
+</ul>
+{% endif %}
 <main>
     {% block content %}{% endblock %}
 </main>
