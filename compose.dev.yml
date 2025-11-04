@@ -12,6 +12,15 @@ services:
    env_file:
      - .env
  
+ redis:
+   image: redis:7-alpine
+   container_name: pentest-redis
+   ports:
+     - "6379:6379"
+   volumes:
+     - redis_data:/data
+   command: redis-server --appendonly yes
+ 
  django-web:
    build: .
    container_name: django-docker-dev
@@ -20,6 +29,8 @@ services:
      - "8000:8000"
    depends_on:
      - db
+     - redis
+     - pentest-api
    environment:
      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
      DEBUG: ${DEBUG}
@@ -28,14 +39,44 @@ services:
      DATABASE_ENGINE: ${DATABASE_ENGINE}
      DATABASE_NAME: ${DATABASE_NAME}
      DATABASE_USERNAME: ${DATABASE_USERNAME}
- 
      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
      DATABASE_HOST: ${DATABASE_HOST}
      DATABASE_PORT: ${DATABASE_PORT}
+     PENTEST_API_BASE_URL: http://pentest-api:8001
    volumes: 
      - .:/app
    env_file:
      - .env
+
+ pentest-api:
+   build: ./pentest_worker
+   container_name: pentest-api
+   ports:
+     - "8001:8001"
+   depends_on:
+     - redis
+   environment:
+     REDIS_URL: redis://redis:6379/0
+     CELERY_BROKER_URL: redis://redis:6379/0
+     CELERY_RESULT_BACKEND: redis://redis:6379/0
+   volumes:
+     - ./pentest_worker:/app
+   command: uvicorn main:app --host 0.0.0.0 --port 8001 --reload
+   networks:
+     - default
+
+ pentest-worker:
+   build: ./pentest_worker
+   container_name: pentest-worker
+   depends_on:
+     - redis
+   environment:
+     REDIS_URL: redis://redis:6379/0
+     CELERY_BROKER_URL: redis://redis:6379/0
+     CELERY_RESULT_BACKEND: redis://redis:6379/0
+   volumes:
+     - ./pentest_worker:/app
+   command: celery -A celery_app worker --loglevel=info --concurrency=4
 
  adminer:
     image: adminer
@@ -45,3 +86,4 @@ services:
 
 volumes:
    postgres_data:
+   redis_data:
