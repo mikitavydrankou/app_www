@@ -7,39 +7,128 @@
     {% if user.is_authenticated %}
         <p>Hello, <strong>{{ user.get_full_name|default:user.get_username }}</strong>.</p>
 
-        <form method="post">
+        <form method="post" style="margin-bottom: 2rem;">
             {% csrf_token %}
             {{ form.non_field_errors }}
-            <label for="id_domain">{{ form.domain.label }}</label>
-            {{ form.domain }}
-            {% if form.domain.errors %}
-                <ul class="errorlist">
-                    {% for error in form.domain.errors %}
-                        <li>{{ error }}</li>
-                    {% endfor %}
-                </ul>
-            {% endif %}
-            <button type="submit">Ping</button>
+            
+            <div style="margin-bottom: 1rem;">
+                <label for="id_target">{{ form.target.label }}</label>
+                {{ form.target }}
+                {% if form.target.errors %}
+                    <ul class="errorlist">
+                        {% for error in form.target.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+            
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">{{ form.operations.label }}</label>
+                {% for choice in form.operations %}
+                    <div style="margin-bottom: 0.25rem;">
+                        {{ choice.tag }}
+                        <label for="{{ choice.id_for_label }}" style="display: inline; font-weight: normal; margin-left: 0.5rem;">
+                            {{ choice.choice_label }}
+                        </label>
+                    </div>
+                {% endfor %}
+                {% if form.operations.errors %}
+                    <ul class="errorlist">
+                        {% for error in form.operations.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                <small style="color: #6b7280; display: block; margin-top: 0.25rem;">{{ form.operations.help_text }}</small>
+            </div>
+            
+            <div style="margin-bottom: 1rem;">
+                <label for="id_ports">{{ form.ports.label }}</label>
+                {{ form.ports }}
+                {% if form.ports.errors %}
+                    <ul class="errorlist">
+                        {% for error in form.ports.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                <small style="color: #6b7280; display: block; margin-top: 0.25rem;">{{ form.ports.help_text }}</small>
+            </div>
+            
+            <button type="submit" style="background: #3b82f6; color: white; font-weight: bold; cursor: pointer;">
+                Run Pentest
+            </button>
         </form>
 
-        {% if ping_history %}
-            <h2>История пингов</h2>
-            <ul>
-                {% for record in ping_history %}
-                    <li>
-                        <strong>{{ record.domain }}</strong> —
-                        {% if record.success %}
-                            {{ record.latency_ms|floatformat:2 }} мс
-                        {% else %}
-                            ошибка: {{ record.error_message }}
+        {% if pentest_history %}
+            <h2>Operation History</h2>
+            <ul style="list-style: none; padding: 0;">
+                {% for record in pentest_history %}
+                    <li style="margin-bottom: 1rem; padding: 0.75rem; border-left: 3px solid {% if record.status == 'success' %}#10b981{% elif record.status == 'failed' %}#ef4444{% elif record.status == 'progress' %}#f59e0b{% else %}#6b7280{% endif %}; background: #f9fafb;">
+                        <div style="display: flex; justify-content: space-between; align-items: start;">
+                            <div>
+                                <strong>{{ record.target }}</strong>
+                                <span style="margin-left: 0.5rem; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.75rem; background: {% if record.status == 'success' %}#d1fae5{% elif record.status == 'failed' %}#fee2e2{% elif record.status == 'progress' %}#fef3c7{% else %}#e5e7eb{% endif %}; color: {% if record.status == 'success' %}#065f46{% elif record.status == 'failed' %}#991b1b{% elif record.status == 'progress' %}#92400e{% else %}#374151{% endif %};">
+                                    {{ record.get_operation_display }}
+                                </span>
+                                <span style="margin-left: 0.25rem; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.75rem; background: #e0e7ff; color: #3730a3;">
+                                    {{ record.get_status_display }}
+                                </span>
+                            </div>
+                            <small style="color: #6b7280;">{{ record.created_at|date:"d.m.Y H:i" }}</small>
+                        </div>
+                        <div style="margin-top: 0.5rem;">
+                            {% if record.operation == 'ping' %}
+                                {% if record.success and record.latency_ms %}
+                                    <span style="color: #10b981;">✓ {{ record.latency_ms|floatformat:2 }} ms</span>
+                                {% elif not record.success %}
+                                    <span style="color: #f59e0b;">⚠ No response from host</span>
+                                {% endif %}
+                            {% elif record.operation == 'port_scan' %}
+                                {% if record.success %}
+                                    <span style="color: #10b981;">✓ Scan completed</span>
+                                    {% if record.result_data.output %}
+                                        <details style="margin-top: 0.5rem;">
+                                            <summary style="cursor: pointer; color: #3b82f6;">Show result</summary>
+                                            <pre style="background: #1f2937; color: #e5e7eb; padding: 0.5rem; border-radius: 0.25rem; overflow-x: auto; font-size: 0.75rem; margin-top: 0.5rem;">{{ record.result_data.output }}</pre>
+                                        </details>
+                                    {% endif %}
+                                {% endif %}
+                            {% elif record.operation == 'dns_lookup' %}
+                                {% if record.success and record.result_data.output %}
+                                    <details style="margin-top: 0.5rem;">
+                                        <summary style="cursor: pointer; color: #3b82f6;">Show DNS records</summary>
+                                        <pre style="background: #1f2937; color: #e5e7eb; padding: 0.5rem; border-radius: 0.25rem; overflow-x: auto; font-size: 0.75rem; margin-top: 0.5rem;">{{ record.result_data.output }}</pre>
+                                    </details>
+                                {% endif %}
+                            {% elif record.operation == 'http_headers' %}
+                                {% if record.success and record.result_data %}
+                                    <span style="color: #10b981;">✓ {{ record.result_data.status }}</span>
+                                    {% if record.result_data.headers %}
+                                        <details style="margin-top: 0.5rem;">
+                                            <summary style="cursor: pointer; color: #3b82f6;">Show headers</summary>
+                                            <pre style="background: #1f2937; color: #e5e7eb; padding: 0.5rem; border-radius: 0.25rem; overflow-x: auto; font-size: 0.75rem; margin-top: 0.5rem;">{% for key, value in record.result_data.headers.items %}{{ key }}: {{ value }}
+{% endfor %}</pre>
+                                        </details>
+                                    {% endif %}
+                                {% endif %}
+                            {% endif %}
+                            
+                            {% if record.error_message %}
+                                <br><small style="color: #ef4444;">{{ record.error_message }}</small>
+                            {% endif %}
+                        </div>
+                        {% if record.completed_at %}
+                            <small style="color: #9ca3af; display: block; margin-top: 0.25rem;">
+                                Completed: {{ record.completed_at|date:"d.m.Y H:i:s" }}
+                            </small>
                         {% endif %}
-                        <br>
-                        <small>{{ record.created_at|date:"d.m.Y H:i" }}</small>
                     </li>
                 {% endfor %}
             </ul>
         {% else %}
-            <p>История пингов пуста.</p>
+            <p>Operation history is empty. Select operations above to start testing.</p>
         {% endif %}
     {% else %}
         <p>Please <a href="{% url 'login' %}">log in</a> or <a href="{% url 'register' %}">create an account</a> to see private content.</p>

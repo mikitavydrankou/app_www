@@ -128,3 +128,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 LOGIN_REDIRECT_URL = 'home'
 LOGOUT_REDIRECT_URL = 'login'
+
+# Pentest API settings
+PENTEST_API_BASE_URL = os.environ.get('PENTEST_API_BASE_URL', 'http://pentest-api:8001')
+PENTEST_API_TIMEOUT = int(os.environ.get('PENTEST_API_TIMEOUT', '30'))
